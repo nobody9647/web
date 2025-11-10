@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qian capital</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
+:root {
+  --bg: #050513;
+  --neon1: #a000ff;
+  --neon2: #00ffe0;
+  --text: #e5e5ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  height:100%;
+  font-family:'Orbitron',sans-serif;
+  background:radial-gradient(circle at 50% 50%,#10102b 0%,var(--bg) 70%);
+  color:var(--text);
+  overflow:hidden;
+}
+/* 扫描线 */
+body::before{
+  content:"";
+  position:fixed; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.02) 0,
+    rgba(255,255,255,0.02) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  animation:scan 6s linear infinite;
+}
+@keyframes scan{from{background-position-y:0}to{background-position-y:100%}}
+
+/* 画布层顺序：最底层网格 -> 中层粒子 -> 顶层内容 */
+canvas{position:fixed; inset:0}
+#grid{z-index:0}
+#bg{z-index:1}
+
+.container{
+  position:relative; z-index:2; /* 在画布之上 */
+  height:100%;
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center; text-align:center;
+}
+.logo{
+  font-size:160px; font-weight:900; color:var(--neon2);
+  text-shadow:
+    0 0 10px var(--neon2),
+    0 0 20px var(--neon1),
+    0 0 40px var(--neon2),
+    0 0 80px var(--neon1);
+  animation:pulse 4s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{text-shadow:0 0 10px var(--neon2),0 0 20px var(--neon1),0 0 40px var(--neon2)}
+  50%{text-shadow:0 0 30px var(--neon1),0 0 60px var(--neon2),0 0 100px var(--neon1)}
+}
+.subtitle{
+  margin-top:20px; font-size:22px; letter-spacing:4px; text-transform:uppercase;
+  color:var(--text); text-shadow:0 0 10px var(--neon1),0 0 20px var(--neon2);
+}
+.bar{
+  margin:26px auto 18px; width:200px; height:2px;
+  background:linear-gradient(90deg,transparent,var(--neon2),transparent);
+  box-shadow:0 0 20px var(--neon2);
+}
+.desc{
+  font-size:18px; color:#b0b0ff; max-width:600px; line-height:1.8;
+  text-shadow:0 0 6px rgba(255,255,255,0.15);
+}
+
+/* 中部数值徽章 */
+.metrics{
+  display:flex; gap:14px; flex-wrap:wrap; justify-content:center; align-items:center;
+  margin-top:8px; margin-bottom:2px;
+}
+.chip{
+  padding:10px 14px; border-radius:999px; font-size:16px; letter-spacing:1px;
+  color:#dffaff;
+  background:linear-gradient(90deg, rgba(0,255,224,.16), rgba(160,0,255,.12));
+  border:1px solid rgba(140,170,255,.35);
+  box-shadow: 0 0 16px rgba(0,255,224,.18), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:saturate(130%);
+}
+
+/* 底部联系方式（最小字号） */
+.contact{
+  position:fixed; left:50%; bottom:10px; transform:translateX(-50%);
+  display:flex; align-items:center; gap:8px; z-index:3;
+  font-size:10px; letter-spacing:.06em; color:#99b3ff; opacity:.9;
+}
+.contact a{ color:#9ff; text-decoration:none; border-bottom:1px dotted rgba(159,255,255,.4); }
+.contact svg{ width:12px; height:12px; filter: drop-shadow(0 0 4px rgba(0,255,224,.6)); }
+
+/* 自适应 */
+@media (max-width:420px){
+  .logo{font-size:128px}
+  .chip{font-size:14px}
+}
+</style>
+</head>
+<body>
+<!-- 网格画布 -->
+<canvas id="grid"></canvas>
+<!-- 粒子画布 -->
+<canvas id="bg"></canvas>
+
+<div class="container">
+  <div class="logo">Q I A N ☯</div>
+  <div class="subtitle">An on-chain arbitrage fund run by true OG degens. </div>
+  <div class="bar"></div>
+
+  <!-- 中部新增：AUM 与 APY -->
+  <div class="metrics" aria-label="Key Metrics">
+    <div class="chip">AUM&nbsp;$13,000,000</div>
+    <div class="chip">APY&nbsp;101%</div>
+  </div>
+
+  <div class="desc"></div>
+</div>
+
+<!-- 底部联系方式（最小字号，Telegram 图标 + 预留链接） -->
+<div class="contact" aria-label="Contact">
+  <!-- Telegram SVG 图标 -->
+
+  <span></span>
+  <a href="https://t.me/huo_ouh" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">
+
+    <path fill="#00ffe0" d="M9.68 15.14l-.38 5.34c.54 0 .77-.23 1.04-.5l2.5-2.4 5.18 3.79c.95.52 1.63.25 1.89-.88l3.42-16.02h.01c.31-1.45-.52-2.02-1.45-1.67L1.4 9.66c-1.39.54-1.37 1.33-.24 1.69l5.22 1.63L19.5 6.46c.62-.39 1.19-.18.72.21"/>
+  </svg></a>
+</div>
+
+<script>
+/* ========== 赛博网格（轻量版） ========== */
+(function(){
+  const g = document.getElementById('grid');
+  const ctx = g.getContext('2d');
+  let W,H, tick=0;
+
+  function resize(){
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    W = g.width  = Math.floor(window.innerWidth  * dpr);
+    H = g.height = Math.floor(window.innerHeight * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0); // 让线条更锐利
+  }
+  window.addEventListener('resize', resize, {passive:true});
+  resize();
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    // 轻微旋转的透视网格
+    ctx.translate(W/2, H/2);
+    ctx.rotate(-Math.PI/12);
+
+    const step = 40;            // 网格间距
+    const move = (tick % step); // 轻微流动感
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.28;
+
+    // 颜色分层：蓝青 + 紫色
+    ctx.strokeStyle = 'rgba(0,255,224,0.28)';
+    for(let x=-W; x<W; x+=step){
+      ctx.beginPath();
+      ctx.moveTo(x+move, -H);
+      ctx.lineTo(x+move,  H);
+      ctx.stroke();
+    }
+    for(let y=-H; y<H; y+=step){
+      ctx.beginPath();
+      ctx.moveTo(-W, y+move);
+      ctx.lineTo( W, y+move);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(160,0,255,0.18)';
+    for(let x=-W; x<W; x+=step*2){
+      ctx.beginPath();
+      ctx.moveTo(x+move, -H);
+      ctx.lineTo(x+move,  H);
+      ctx.stroke();
+    }
+    for(let y=-H; y<H; y+=step*2){
+      ctx.beginPath();
+      ctx.moveTo(-W, y+move);
+      ctx.lineTo( W, y+move);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+    tick += .6;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ========== 粒子背景（与你上个版本一致） ========== */
+(function(){
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let W,H, particles=[];
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize',resize,{passive:true});
+  resize();
+
+  // 初始化粒子
+  for(let i=0;i<100;i++){
+    particles.push({
+      x:Math.random()*W,
+      y:Math.random()*H,
+      r:Math.random()*2+0.5,
+      vx:(Math.random()-0.5)*0.6,
+      vy:(Math.random()-0.5)*0.6,
+      c:Math.random()>0.5?'#00ffe0':'#7d00ff'
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of particles){
+      ctx.beginPath();
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = 0.7;
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0) p.x=W; if(p.x>W) p.x=0;
+      if(p.y<0) p.y=H; if(p.y>H) p.y=0;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
